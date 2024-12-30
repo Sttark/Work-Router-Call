@@ -10,8 +10,6 @@
     <form id="orderForm">
         <label for="order_id">Order ID:</label>
         <input type="text" id="order_id" name="order_id" required><br><br>
-        <label for="machine_id">Machine ID:</label>
-        <input type="text" id="machine_id" name="machine_id" required><br><br>
         <button type="submit">Fetch Order Details</button>
     </form>
     <h2>Results</h2>
@@ -24,10 +22,10 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const orderId = document.getElementById('order_id').value;
-            const machineId = document.getElementById('machine_id').value;
+            const machineId = "229"; // Fixed machine ID
 
             try {
-                const response = await fetch('http://<your-server-ip>:5000/order', {
+                const response = await fetch('http://localhost:5001/order', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
