@@ -1,44 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Details Interface</title>
-</head>
-<body>
+<html>
+  <head>
+    <title>Order Details and Box Calculations</title>
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: center;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
     <h1>Order Details</h1>
-    <form id="orderForm">
-        <label for="order_id">Order ID:</label>
-        <input type="text" id="order_id" name="order_id" required><br><br>
-        <button type="submit">Fetch Order Details</button>
-    </form>
-    <h2>Results</h2>
-    <pre id="results"></pre>
+    <label for="orderId">Order ID:</label>
+    <input type="text" id="orderId" placeholder="Enter Order ID" />
+    <button onclick="fetchDetails()">Fetch Order Details</button>
+
+    <div id="results">
+      <h3>Results:</h3>
+      <p id="jobNumberOutput" style="font-weight: bold; color: green;"></p>
+      <pre id="resultOutput"></pre>
+      <h3>Box Calculations:</h3>
+      <table id="boxTable">
+        <thead>
+          <tr>
+            <th>Box Size</th>
+            <th>Weight Per Box</th>
+            <th>Number of Boxes</th>
+            <th>Quantity Per Box</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
 
     <script>
-        const form = document.getElementById('orderForm');
-        const results = document.getElementById('results');
+      function fetchDetails() {
+        const orderId = document.getElementById('orderId').value;
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const orderId = document.getElementById('order_id').value;
-            const machineId = "229"; // Fixed machine ID
+        if (!orderId) {
+          alert("Please enter an Order ID.");
+          return;
+        }
 
-            try {
-                const response = await fetch('http://localhost:5001/order', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ order_id: orderId, machine_id: machineId }),
-                });
+        console.log("Fetching details for Order ID:", orderId); // Debugging log
 
-                const data = await response.json();
-                results.textContent = JSON.stringify(data, null, 2);
-            } catch (error) {
-                results.textContent = 'Error fetching order details.';
+        google.script.run
+          .withSuccessHandler((data) => {
+            console.log("Data received from backend:", data); // Debugging log
+            const jobNumberOutput = document.getElementById('jobNumberOutput');
+            const resultOutput = document.getElementById('resultOutput');
+            const boxTableBody = document.getElementById('boxTable').querySelector('tbody');
+
+            if (data.error) {
+              resultOutput.textContent = `Error: ${data.error}`;
+              jobNumberOutput.textContent = ""; // Clear job number output
+            } else {
+              const jobNumber = data.order_id || "N/A";
+              jobNumberOutput.textContent = `Job Number: ${jobNumber}`;
+
+              resultOutput.innerHTML = `
+                <strong>Substrate:</strong> ${data.substrate} <br>
+                <strong>Laminate:</strong> ${data.laminate} <br>
+                <strong>Carton Type:</strong> ${data.carton_type || "N/A"} <br>
+                <strong>Size:</strong> ${data.size_length} x ${data.size_width} x ${data.size_depth}<br>
+                <strong>Total Quantity:</strong> ${data.total_qty} <br>
+                <strong>Design Quantity:</strong> ${data.design_qty} <br> <!-- Add Design Quantity -->
+                <strong>Total Order Weight:</strong> ${data.total_order_weight.toFixed(2)}
+              `;
+
+              // Populate box table
+              boxTableBody.innerHTML = ''; // Clear existing rows
+              data.boxResults.forEach((box) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                  <td>${box.size}</td>
+                  <td>${box.weight}</td>
+                  <td>${box.numBoxes}</td>
+                  <td>${box.qtyPerBox}</td>
+                `;
+                boxTableBody.appendChild(row);
+              });
             }
-        });
+          })
+          .withFailureHandler((error) => {
+            console.error("Error from backend:", error); // Debugging log
+            alert("Error fetching job details: " + error.message);
+          })
+          .fetchOrderDetailsAndCalculate(orderId);
+      }
     </script>
-</body>
+  </body>
 </html>
