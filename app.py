@@ -3,7 +3,12 @@ from flask_cors import CORS
 from fetch_order_details import fetch_order_details  # Import your script function
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
+
+# Add this route for testing
+@app.route('/')
+def home():
+    return "Flask app is running!"
 
 @app.route('/order', methods=['POST'])
 def get_order_details():
@@ -22,4 +27,4 @@ def get_order_details():
         return jsonify({"error": "Failed to retrieve order details"}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
+    app.run(host='0.0.0.0', port=5001, debug=True)
