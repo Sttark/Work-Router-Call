@@ -16,7 +16,7 @@ def fetch_order_details(order_id, machine_id):
 def test_fetch_order_details():
     # Replace these with test values
     test_order_id = "733236"  # Example order ID
-    test_machine_id = "225"  # Replace with your machine ID
+    test_machine_id = "227"  # Replace with your machine ID
 
     result = fetch_order_details(test_order_id, test_machine_id)
     if result:
